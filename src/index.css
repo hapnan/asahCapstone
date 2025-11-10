@@ -209,17 +209,5 @@
     body {
         @apply bg-background text-foreground;
         letter-spacing: var(--tracking-normal);
-        margin: 0;
-        padding: 0;
-        min-height: 100vh;
-    }
-
-    html,
-    body,
-    #root {
-        height: 100%;
-        width: 100%;
-        margin: 0;
-        padding: 0;
     }
 }
