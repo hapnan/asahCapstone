@@ -1,35 +1,35 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { AppSidebar } from '@/components/app-sidebar';
+import { ChartAreaInteractive } from '@/components/chart-area-interactive';
+import { DataTable } from '@/components/data-table';
+import { SectionCards } from '@/components/section-cards';
+import { SiteHeader } from '@/components/site-header';
+import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
+import data from './app/dashboard/data.json';
 
-function App() {
-  const [count, setCount] = useState(0)
-
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+export default function Page() {
+    return (
+        <SidebarProvider
+            style={{
+                '--sidebar-width': '280px',
+                '--header-height': '60px',
+            }}
+            className='min-h-screen w-full'
+        >
+            <AppSidebar variant='inset' />
+            <SidebarInset className='flex-1'>
+                <SiteHeader />
+                <div className='flex flex-1 flex-col w-full'>
+                    <div className='@container/main flex flex-1 flex-col gap-2 w-full'>
+                        <div className='flex flex-col gap-4 py-4 md:gap-6 md:py-6 w-full'>
+                            <SectionCards />
+                            <div className='px-4 lg:px-6 w-full'>
+                                <ChartAreaInteractive />
+                            </div>
+                            <DataTable data={data} />
+                        </div>
+                    </div>
+                </div>
+            </SidebarInset>
+        </SidebarProvider>
+    );
 }
-
-export default App
