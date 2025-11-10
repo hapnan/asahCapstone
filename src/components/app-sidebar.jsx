@@ -44,7 +44,7 @@ const data = {
             icon: IconDashboard,
         },
         {
-            title: 'Lifecycle',
+            title: 'Task List',
             url: '#',
             icon: IconListDetails,
         },
@@ -52,16 +52,6 @@ const data = {
             title: 'Analytics',
             url: '#',
             icon: IconChartBar,
-        },
-        {
-            title: 'Projects',
-            url: '#',
-            icon: IconFolder,
-        },
-        {
-            title: 'Team',
-            url: '#',
-            icon: IconUsers,
         },
     ],
     navClouds: [
@@ -160,7 +150,7 @@ export function AppSidebar({ ...props }) {
                         >
                             <a href='#'>
                                 <IconInnerShadowTop className='size-5!' />
-                                <span className='text-base font-semibold'>Acme Inc.</span>
+                                <span className='text-base font-semibold'>Bank Holahop</span>
                             </a>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
