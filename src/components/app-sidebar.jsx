@@ -168,8 +168,6 @@ export function AppSidebar({ ...props }) {
             </SidebarHeader>
             <SidebarContent>
                 <NavMain items={data.navMain} />
-                <NavDocuments items={data.documents} />
-                <NavSecondary items={data.navSecondary} className='mt-auto' />
             </SidebarContent>
             <SidebarFooter>
                 <NavUser user={data.user} />
