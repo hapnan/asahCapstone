@@ -1,18 +1,21 @@
-import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
-import { createBrowserRouter } from 'react-router';
-import { RouterProvider } from 'react-router/dom';
-import './index.css';
-import Page from './app/dashboard/page.jsx';
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { createBrowserRouter } from "react-router";
+import { RouterProvider } from "react-router/dom";
+import { ThemeProvider } from "./lib/themeContext.jsx";
+import "./index.css";
+import Page from "./app/dashboard/page.jsx";
 const router = createBrowserRouter([
-    {
-        path: '/',
-        element: <Page />,
-    },
+  {
+    path: "/",
+    element: <Page />,
+  },
 ]);
 
-createRoot(document.getElementById('root')).render(
-    <StrictMode>
-        <RouterProvider router={router} />
-    </StrictMode>
+createRoot(document.getElementById("root")).render(
+  <StrictMode>
+    <ThemeProvider>
+      <RouterProvider router={router} />
+    </ThemeProvider>
+  </StrictMode>
 );
