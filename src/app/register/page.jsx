@@ -18,7 +18,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { startRegistration } from '@simplewebauthn/browser';
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
-import { useNavigate } from 'react-router';
+import { useNavigate } from '@tanstack/react-router';
 
 const registerFormSchema = z.object({
     email: z.email('Invalid email address'),
@@ -81,7 +81,7 @@ export default function RegisterPage() {
                     description: new Date().toLocaleTimeString('id-ID'),
                 });
 
-                navigate('/login');
+                navigate({ to: '/login' });
             } else {
                 toast.error('Registration failed');
             }
