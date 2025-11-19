@@ -5,11 +5,17 @@ import { RouterProvider } from "react-router/dom";
 import { ThemeProvider } from "./lib/themeContext.jsx";
 import "./index.css";
 import Page from "./app/dashboard/page.jsx";
+import LoginPage from "./app/login/page.jsx";
+
 const router = createBrowserRouter([
   {
     path: "/",
     element: <Page />,
   },
+  {
+    path:"/login",
+    element: <LoginPage />,
+  }
 ]);
 
 createRoot(document.getElementById("root")).render(
