@@ -19,6 +19,7 @@ import { Label } from '@/components/ui/label';
 import { startRegistration } from '@simplewebauthn/browser';
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { useNavigate } from '@tanstack/react-router';
+import { authAPI } from '@/lib/api';
 
 const registerFormSchema = z.object({
     email: z.email('Invalid email address'),
@@ -39,51 +40,38 @@ export default function RegisterPage() {
             const email = value.value.email;
             const name = value.value.name;
 
-            const resp = await fetch(
-                `http://localhost:3000/auth/register/options?username=${email}&name=${name}`,
-                {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                }
-            );
-
-            const options = await resp.json();
-            let attResp;
             try {
-                attResp = await startRegistration({ optionsJSON: options });
-            } catch (error) {
-                if (error.name === 'InvalidStateError') {
-                    console.log('Error: Authenticator was probably already registered by user');
-                } else {
-                    console.log(error);
+                // Get registration options
+                const resp = await authAPI.getRegisterOptions(email, name);
+                const options = await resp.json();
+
+                // Start passkey registration
+                let attResp;
+                try {
+                    attResp = await startRegistration({ optionsJSON: options });
+                } catch (error) {
+                    if (error.name === 'InvalidStateError') {
+                        toast.error('Authenticator was probably already registered');
+                    } else {
+                        toast.error('Registration error: ' + error.message);
+                    }
+                    return;
                 }
-            }
 
-            const verifyResp = await fetch('http://localhost:3000/auth/register/verify', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    registrationResponse: attResp,
-                    username: email,
-                }),
-            });
+                // Verify registration
+                const verifyResp = await authAPI.verifyRegister(attResp, email);
 
-            const verificationJSON = await verifyResp.json();
-
-            console.log(verificationJSON);
-
-            if (verificationJSON === true) {
-                toast.success('Registration successful!', {
-                    description: new Date().toLocaleTimeString('id-ID'),
-                });
-
-                navigate({ to: '/login' });
-            } else {
-                toast.error('Registration failed');
+                if (verifyResp.ok) {
+                    toast.success('Registration successful!', {
+                        description: new Date().toLocaleTimeString('id-ID'),
+                    });
+                    navigate({ to: '/login' });
+                } else {
+                    toast.error('Registration failed');
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                toast.error('An error occurred. Please try again.');
             }
         },
     });
@@ -174,7 +162,7 @@ export default function RegisterPage() {
                     </Field>
                     <span className='text-sm text-muted-foreground mb-2'>
                         Have an account?{' '}
-                        <a href='#' className='underline hover:text-primary'>
+                        <a href='/login' className='underline hover:text-primary'>
                             Log in here
                         </a>
                     </span>
