@@ -1,4 +1,4 @@
-import * as React from "react";
+import { useState, useEffect, useId, useMemo } from "react";
 
 import {
   closestCenter,
@@ -81,17 +81,17 @@ export function DataTable({ data: initialData }) {
   // -------------------------------------------------------------------------
   // STATE
   // -------------------------------------------------------------------------
-  const [data, setData] = React.useState(() => initialData);
-  const [rowSelection, setRowSelection] = React.useState({});
-  const [columnVisibility, setColumnVisibility] = React.useState({});
-  const [columnFilters, setColumnFilters] = React.useState([]);
-  const [sorting, setSorting] = React.useState([]);
-  const [pagination, setPagination] = React.useState({
+  const [data, setData] = useState(() => initialData);
+  const [rowSelection, setRowSelection] = useState({});
+  const [columnVisibility, setColumnVisibility] = useState({});
+  const [columnFilters, setColumnFilters] = useState([]);
+  const [sorting, setSorting] = useState([]);
+  const [pagination, setPagination] = useState({
     pageIndex: 0,
     pageSize: 10,
   });
 
-  const sortableId = React.useId();
+  const sortableId = useId();
 
   // -------------------------------------------------------------------------
   // DND SENSORS
@@ -102,8 +102,7 @@ export function DataTable({ data: initialData }) {
     useSensor(KeyboardSensor)
   );
 
-  const dataIds = React.useMemo(() => data?.map(({ id }) => id) || [], [data]);
-
+  // const dataIds = useMemo(() => data?.map(({ id }) => id) || [], [data]);
   // -------------------------------------------------------------------------
   // TABLE INITIALIZATION
   // -------------------------------------------------------------------------
@@ -130,23 +129,59 @@ export function DataTable({ data: initialData }) {
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
+    // getSortedRowModel: getSortedRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
   });
+  const paginatedRows = table.getPaginationRowModel().rows;
+  const visibleRowIds = useMemo(
+    () => paginatedRows.map((r) => r.id),
+    [paginatedRows]
+  );
+
+  useEffect(() => {
+    const pageCount = table.getPageCount();
+    if (pagination.pageIndex > 0 && pagination.pageIndex >= pageCount) {
+      setPagination((p) => ({ ...p, pageIndex: Math.max(0, pageCount - 1) }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [table.getPageCount(), data.length]);
 
   // -------------------------------------------------------------------------
   // DND HANDLER (fully original)
   // -------------------------------------------------------------------------
-  function handleDragEnd(event) {
-    const { active, over } = event;
-    if (active && over && active.id !== over.id) {
-      setData((data) => {
-        const oldIndex = dataIds.indexOf(active.id);
-        const newIndex = dataIds.indexOf(over.id);
-        return arrayMove(data, oldIndex, newIndex);
-      });
-    }
+  function handleDragEnd({ active, over }) {
+    if (!over || active.id === over.id) return;
+
+    setData((prev) => {
+      const currentVisible = table
+        .getPaginationRowModel()
+        .rows.map((r) => r.id);
+
+      const oldLocal = currentVisible.indexOf(active.id);
+      const newLocal = currentVisible.indexOf(over.id);
+
+      // if either is not in current page, abort (we only allow reorders inside same page)
+      if (oldLocal === -1 || newLocal === -1) return prev;
+
+      // map local visible position to global index in `prev` data array
+      const oldGlobal = prev.findIndex(
+        (d) => String(d.id) === String(currentVisible[oldLocal])
+      );
+      const newGlobal = prev.findIndex(
+        (d) => String(d.id) === String(currentVisible[newLocal])
+      );
+
+      // safety: if not found, abort
+      if (oldGlobal === -1 || newGlobal === -1) return prev;
+
+      // if nothing changes, return prev
+      if (oldGlobal === newGlobal) return prev;
+
+      const next = arrayMove(prev, oldGlobal, newGlobal);
+
+      return next;
+    });
   }
 
   // -------------------------------------------------------------------------
@@ -267,12 +302,12 @@ export function DataTable({ data: initialData }) {
               </TableHeader>
 
               <TableBody className="**:data-[slot=table-cell]:first:w-8">
-                {table.getRowModel().rows?.length ? (
+                {table.getPaginationRowModel().rows?.length ? (
                   <SortableContext
-                    items={dataIds}
+                    items={visibleRowIds}
                     strategy={verticalListSortingStrategy}
                   >
-                    {table.getRowModel().rows.map((row) => (
+                    {table.getPaginationRowModel().rows.map((row) => (
                       <DraggableRow key={row.id} row={row} />
                     ))}
                   </SortableContext>
