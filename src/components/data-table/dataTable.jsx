@@ -273,7 +273,6 @@ export function DataTable({ data: initialData }) {
 
       {/** --------------------- TAB: OUTLINE --------------------------- **/}
       <TabsContent
-        key={JSON.stringify(columnVisibility)}
         value="outline"
         className="relative flex flex-col gap-4 overflow-auto px-4 lg:px-6"
       >
@@ -306,6 +305,11 @@ export function DataTable({ data: initialData }) {
               <TableBody className="**:data-[slot=table-cell]:first:w-8">
                 {table.getPaginationRowModel().rows?.length ? (
                   <SortableContext
+                    key={JSON.stringify({
+                      sel: table.getState().rowSelection,
+                      vis: table.getState().columnVisibility,
+                      pag: table.getState().pagination,
+                    })}
                     items={visibleRowIds}
                     strategy={verticalListSortingStrategy}
                   >
