@@ -51,6 +51,7 @@ import {
   IconChevronsRight,
   IconPlus,
   IconLayoutColumns,
+  IconAdjustmentsHorizontal,
 } from "@tabler/icons-react";
 
 import {
@@ -264,14 +265,15 @@ export function DataTable({ data: initialData }) {
           </DropdownMenu>
 
           <Button variant="outline" size="sm">
-            <IconPlus />
-            <span className="hidden lg:inline">Add Section</span>
+            <IconAdjustmentsHorizontal />
+            <span className="hidden lg:inline">Filter Table</span>
           </Button>
         </div>
       </div>
 
       {/** --------------------- TAB: OUTLINE --------------------------- **/}
       <TabsContent
+        key={JSON.stringify(columnVisibility)}
         value="outline"
         className="relative flex flex-col gap-4 overflow-auto px-4 lg:px-6"
       >
