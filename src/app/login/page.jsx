@@ -133,7 +133,7 @@ export default function LoginPage() {
                 </CardContent>
                 <CardFooter className='text-center flex flex-col items-center'>
                     <Field>
-                        <Button type='submit' className='w-full' form='formLogin'>
+                        <Button type='submit' className='w-full cursor-pointer' form='formLogin'>
                             Log in with Passkey
                         </Button>
                     </Field>
