@@ -14,12 +14,15 @@ export function NavMain({ items }) {
         <SidebarMenu>
           {items.map((item) => (
             <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton
-                asChild
-                tooltip={item.title}
-                className="bg-accent! dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90 dark:hover:text-primary-foreground dark:active:bg-primary/90 dark:active:text-primary-foreground duration-200 ease-linear"
-              >
-                <Link to={item.url}>
+              <SidebarMenuButton asChild tooltip={item.title}>
+                <Link
+                  to={item.url}
+                  activeProps={{
+                    className:
+                      "bg-accent! dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90 dark:hover:text-primary-foreground dark:active:bg-primary/90 dark:active:text-primary-foreground",
+                  }}
+                  className="duration-200 ease-linear"
+                >
                   {item.icon && <item.icon />}
                   <span>{item.title}</span>
                 </Link>

@@ -2,6 +2,7 @@ import * as React from "react";
 import {
   IconCamera,
   IconChartBar,
+  IconClock,
   IconDashboard,
   IconDatabase,
   IconFileAi,
@@ -49,9 +50,9 @@ const data = {
       icon: IconListDetails,
     },
     {
-      title: "Analytics",
-      url: "#",
-      icon: IconChartBar,
+      title: "Callout History",
+      url: "/history",
+      icon: IconClock,
     },
   ],
   navClouds: [

@@ -15,6 +15,7 @@ import { Route as _authenticatedRouteImport } from './routes/__authenticated'
 import { Route as _authenticatedLayoutRouteImport } from './routes/__authenticated/_layout'
 import { Route as _authenticatedLayoutIndexRouteImport } from './routes/__authenticated/_layout.index'
 import { Route as _authenticatedLayoutTaskRouteImport } from './routes/__authenticated/_layout.task'
+import { Route as _authenticatedLayoutHistoryRouteImport } from './routes/__authenticated/_layout.history'
 
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
@@ -46,16 +47,24 @@ const _authenticatedLayoutTaskRoute =
     path: '/task',
     getParentRoute: () => _authenticatedLayoutRoute,
   } as any)
+const _authenticatedLayoutHistoryRoute =
+  _authenticatedLayoutHistoryRouteImport.update({
+    id: '/history',
+    path: '/history',
+    getParentRoute: () => _authenticatedLayoutRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/history': typeof _authenticatedLayoutHistoryRoute
   '/task': typeof _authenticatedLayoutTaskRoute
   '/': typeof _authenticatedLayoutIndexRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/history': typeof _authenticatedLayoutHistoryRoute
   '/task': typeof _authenticatedLayoutTaskRoute
   '/': typeof _authenticatedLayoutIndexRoute
 }
@@ -65,20 +74,22 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/__authenticated/_layout': typeof _authenticatedLayoutRouteWithChildren
+  '/__authenticated/_layout/history': typeof _authenticatedLayoutHistoryRoute
   '/__authenticated/_layout/task': typeof _authenticatedLayoutTaskRoute
   '/__authenticated/_layout/': typeof _authenticatedLayoutIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/login' | '/register' | '/task' | '/'
+  fullPaths: '/login' | '/register' | '/history' | '/task' | '/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/login' | '/register' | '/task' | '/'
+  to: '/login' | '/register' | '/history' | '/task' | '/'
   id:
     | '__root__'
     | '/__authenticated'
     | '/login'
     | '/register'
     | '/__authenticated/_layout'
+    | '/__authenticated/_layout/history'
     | '/__authenticated/_layout/task'
     | '/__authenticated/_layout/'
   fileRoutesById: FileRoutesById
@@ -133,15 +144,24 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof _authenticatedLayoutTaskRouteImport
       parentRoute: typeof _authenticatedLayoutRoute
     }
+    '/__authenticated/_layout/history': {
+      id: '/__authenticated/_layout/history'
+      path: '/history'
+      fullPath: '/history'
+      preLoaderRoute: typeof _authenticatedLayoutHistoryRouteImport
+      parentRoute: typeof _authenticatedLayoutRoute
+    }
   }
 }
 
 interface _authenticatedLayoutRouteChildren {
+  _authenticatedLayoutHistoryRoute: typeof _authenticatedLayoutHistoryRoute
   _authenticatedLayoutTaskRoute: typeof _authenticatedLayoutTaskRoute
   _authenticatedLayoutIndexRoute: typeof _authenticatedLayoutIndexRoute
 }
 
 const _authenticatedLayoutRouteChildren: _authenticatedLayoutRouteChildren = {
+  _authenticatedLayoutHistoryRoute: _authenticatedLayoutHistoryRoute,
   _authenticatedLayoutTaskRoute: _authenticatedLayoutTaskRoute,
   _authenticatedLayoutIndexRoute: _authenticatedLayoutIndexRoute,
 }
