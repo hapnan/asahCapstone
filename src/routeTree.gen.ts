@@ -12,7 +12,9 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as _authenticatedRouteImport } from './routes/__authenticated'
-import { Route as _authenticatedIndexRouteImport } from './routes/__authenticated/index'
+import { Route as _authenticatedLayoutRouteImport } from './routes/__authenticated/_layout'
+import { Route as _authenticatedLayoutIndexRouteImport } from './routes/__authenticated/_layout.index'
+import { Route as _authenticatedLayoutTaskRouteImport } from './routes/__authenticated/_layout.task'
 
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
@@ -28,40 +30,57 @@ const _authenticatedRoute = _authenticatedRouteImport.update({
   id: '/__authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
-const _authenticatedIndexRoute = _authenticatedIndexRouteImport.update({
-  id: '/',
-  path: '/',
+const _authenticatedLayoutRoute = _authenticatedLayoutRouteImport.update({
+  id: '/_layout',
   getParentRoute: () => _authenticatedRoute,
 } as any)
+const _authenticatedLayoutIndexRoute =
+  _authenticatedLayoutIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => _authenticatedLayoutRoute,
+  } as any)
+const _authenticatedLayoutTaskRoute =
+  _authenticatedLayoutTaskRouteImport.update({
+    id: '/task',
+    path: '/task',
+    getParentRoute: () => _authenticatedLayoutRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
-  '/': typeof _authenticatedIndexRoute
+  '/task': typeof _authenticatedLayoutTaskRoute
+  '/': typeof _authenticatedLayoutIndexRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
-  '/': typeof _authenticatedIndexRoute
+  '/task': typeof _authenticatedLayoutTaskRoute
+  '/': typeof _authenticatedLayoutIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/__authenticated': typeof _authenticatedRouteWithChildren
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
-  '/__authenticated/': typeof _authenticatedIndexRoute
+  '/__authenticated/_layout': typeof _authenticatedLayoutRouteWithChildren
+  '/__authenticated/_layout/task': typeof _authenticatedLayoutTaskRoute
+  '/__authenticated/_layout/': typeof _authenticatedLayoutIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/login' | '/register' | '/'
+  fullPaths: '/login' | '/register' | '/task' | '/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/login' | '/register' | '/'
+  to: '/login' | '/register' | '/task' | '/'
   id:
     | '__root__'
     | '/__authenticated'
     | '/login'
     | '/register'
-    | '/__authenticated/'
+    | '/__authenticated/_layout'
+    | '/__authenticated/_layout/task'
+    | '/__authenticated/_layout/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -93,22 +112,49 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof _authenticatedRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/__authenticated/': {
-      id: '/__authenticated/'
+    '/__authenticated/_layout': {
+      id: '/__authenticated/_layout'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof _authenticatedLayoutRouteImport
+      parentRoute: typeof _authenticatedRoute
+    }
+    '/__authenticated/_layout/': {
+      id: '/__authenticated/_layout/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof _authenticatedIndexRouteImport
-      parentRoute: typeof _authenticatedRoute
+      preLoaderRoute: typeof _authenticatedLayoutIndexRouteImport
+      parentRoute: typeof _authenticatedLayoutRoute
+    }
+    '/__authenticated/_layout/task': {
+      id: '/__authenticated/_layout/task'
+      path: '/task'
+      fullPath: '/task'
+      preLoaderRoute: typeof _authenticatedLayoutTaskRouteImport
+      parentRoute: typeof _authenticatedLayoutRoute
     }
   }
 }
 
+interface _authenticatedLayoutRouteChildren {
+  _authenticatedLayoutTaskRoute: typeof _authenticatedLayoutTaskRoute
+  _authenticatedLayoutIndexRoute: typeof _authenticatedLayoutIndexRoute
+}
+
+const _authenticatedLayoutRouteChildren: _authenticatedLayoutRouteChildren = {
+  _authenticatedLayoutTaskRoute: _authenticatedLayoutTaskRoute,
+  _authenticatedLayoutIndexRoute: _authenticatedLayoutIndexRoute,
+}
+
+const _authenticatedLayoutRouteWithChildren =
+  _authenticatedLayoutRoute._addFileChildren(_authenticatedLayoutRouteChildren)
+
 interface _authenticatedRouteChildren {
-  _authenticatedIndexRoute: typeof _authenticatedIndexRoute
+  _authenticatedLayoutRoute: typeof _authenticatedLayoutRouteWithChildren
 }
 
 const _authenticatedRouteChildren: _authenticatedRouteChildren = {
-  _authenticatedIndexRoute: _authenticatedIndexRoute,
+  _authenticatedLayoutRoute: _authenticatedLayoutRouteWithChildren,
 }
 
 const _authenticatedRouteWithChildren = _authenticatedRoute._addFileChildren(
