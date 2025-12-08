@@ -9,8 +9,6 @@ import { Toaster } from '@/components/ui/sonner';
 
 const router = createRouter({
     routeTree,
-    defaultPreload: 'intent',
-    scrollRestoration: true,
     context: {
         auth: undefined,
     },

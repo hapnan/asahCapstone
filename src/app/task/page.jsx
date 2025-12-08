@@ -42,6 +42,8 @@ export default function FollowUpTaskPage() {
   const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
   const [filterStatus, setFilterStatus] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [newTask, setNewTask] = useState({
     customerId: "",
     scheduledDate: "",
@@ -59,6 +61,23 @@ export default function FollowUpTaskPage() {
       task.notes.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesStatus && matchesSearch;
   });
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredTasks.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedTasks = filteredTasks.slice(startIndex, endIndex);
+
+  // Reset to first page when filter or search changes
+  const handleFilterChange = (value) => {
+    setFilterStatus(value);
+    setCurrentPage(1);
+  };
+
+  const handleSearchChange = (value) => {
+    setSearchQuery(value);
+    setCurrentPage(1);
+  };
 
   const pendingTasks = tasks.filter((t) => t.status === "pending");
   const doneTasks = tasks.filter((t) => t.status === "done");
@@ -327,14 +346,14 @@ export default function FollowUpTaskPage() {
               <Input
                 placeholder="Search tasks..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 className="h-9"
               />
             </div>
 
             <div className="flex items-center gap-2">
               <Filter className="h-4 w-4 text-muted-foreground" />
-              <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <Select value={filterStatus} onValueChange={handleFilterChange}>
                 <SelectTrigger className="w-[180px]">
                   <SelectValue />
                 </SelectTrigger>
@@ -371,7 +390,7 @@ export default function FollowUpTaskPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredTasks.length === 0 ? (
+              {paginatedTasks.length === 0 ? (
                 <TableRow>
                   <TableCell
                     colSpan={6}
@@ -381,7 +400,7 @@ export default function FollowUpTaskPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredTasks.map((task) => (
+                paginatedTasks.map((task) => (
                   <TableRow key={task.id}>
                     <TableCell>
                       <div className="flex items-center gap-2">
@@ -453,6 +472,84 @@ export default function FollowUpTaskPage() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Pagination Controls */}
+      {filteredTasks.length > 0 && (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-muted-foreground">
+                Showing {startIndex + 1} to{" "}
+                {Math.min(endIndex, filteredTasks.length)} of{" "}
+                {filteredTasks.length} tasks
+              </div>
+
+              <div className="flex items-center gap-6">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">Rows per page</span>
+                  <Select
+                    value={itemsPerPage.toString()}
+                    onValueChange={(value) => {
+                      setItemsPerPage(Number(value));
+                      setCurrentPage(1);
+                    }}
+                  >
+                    <SelectTrigger className="w-20">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="10">10</SelectItem>
+                      <SelectItem value="20">20</SelectItem>
+                      <SelectItem value="30">30</SelectItem>
+                      <SelectItem value="50">50</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <div className="flex gap-1">
+                    <Button
+                      variant="outline"
+                      size="icon-sm"
+                      onClick={() => setCurrentPage(1)}
+                      disabled={currentPage === 1}
+                    >
+                      <CheckCircle2 className="h-4 w-4 rotate-180" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon-sm"
+                      onClick={() => setCurrentPage(currentPage - 1)}
+                      disabled={currentPage === 1}
+                    >
+                      <Calendar className="h-4 w-4 rotate-180" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon-sm"
+                      onClick={() => setCurrentPage(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                    >
+                      <Calendar className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon-sm"
+                      onClick={() => setCurrentPage(totalPages)}
+                      disabled={currentPage === totalPages}
+                    >
+                      <CheckCircle2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

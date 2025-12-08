@@ -3,16 +3,19 @@ import { Separator } from '@/components/ui/separator';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { ModeToggle } from '@/components/mode-toggle';
 import { useAuth } from '@/lib/authContext';
-import { useNavigate } from '@tanstack/react-router';
+import { redirect, useNavigate } from '@tanstack/react-router';
 import { LogOut } from 'lucide-react';
 
 export function SiteHeader() {
     const { logout, user } = useAuth();
     const navigate = useNavigate();
 
-    const handleLogout = () => {
-        logout();
-        navigate({ to: '/login' });
+    const handleLogout = async () => {
+        const logoutResult = await logout();
+        if(logoutResult.ok){
+            navigate({ to: '/login' });
+        }
+        
     };
 
     return (

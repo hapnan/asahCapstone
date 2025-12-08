@@ -1,5 +1,5 @@
-// API configuration and utilities
-export const API_BASE_URL = 'http://localhost:3000';
+// API configuration and utilitie
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
 /**
  * Custom fetch wrapper that automatically includes credentials (cookies)
@@ -11,7 +11,8 @@ export async function fetchWithCredentials(url, options = {}) {
         headers: {
             'Content-Type': 'application/json',
             ...options.headers,
-        },
+            
+        },  
     };
 
     const response = await fetch(url, {
