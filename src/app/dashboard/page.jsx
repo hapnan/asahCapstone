@@ -1,10 +1,30 @@
+import { useEffect, useState } from "react";
 import { ChartAreaInteractive } from "@/components/chart-area-interactive";
 import { DataTable } from "@/components/data-table/dataTable";
 import { SectionCards } from "@/components/section-cards";
+// import { columns } from "@/components/data-table/column";
+import { columns } from "@/app/dashboard/columns";
+import { customerAPI } from "@/lib/api";
 
-import data from "./data.json";
+// import data from "./data.json";
 
 export default function Page() {
+  const [customers, setCustomers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      const res = await customerAPI.getAllCustomers();
+      const data = await res.json();
+
+      setCustomers(data);
+      setLoading(false);
+    };
+    fetchCustomers();
+  }, []);
+
+  if (loading) return <p>Loading Data ...</p>;
+
   return (
     <div className="flex flex-1 flex-col">
       <div className="@container/main flex flex-1 flex-col gap-2">
@@ -13,7 +33,31 @@ export default function Page() {
           <div className="px-4 lg:px-6">
             <ChartAreaInteractive />
           </div>
-          <DataTable data={data} />
+          <DataTable
+            data={customers}
+            columns={columns}
+            enableTabs={true}
+            enableDrag={false}
+            enableSelect={true}
+            tabs={[
+              { value: "all", label: "All", filterFn: () => true },
+              {
+                value: "failure",
+                label: "Failure",
+                filterFn: (row) => row.predictive_subscribe === "failure",
+              },
+              {
+                value: "nonexistent",
+                label: "Nonexistent",
+                filterFn: (row) => row.predictive_subscribe === "nonexistent",
+              },
+              {
+                value: "success",
+                label: "Success",
+                filterFn: (row) => row.predictive_subscribe === "success",
+              },
+            ]}
+          />
         </div>
       </div>
     </div>
