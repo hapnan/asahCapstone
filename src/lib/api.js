@@ -1,6 +1,5 @@
 // API configuration and utilitie
-export const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
+export const API_BASE_URL = import.meta.env.BASE_API || "http://localhost:3000";
 
 /**
  * Custom fetch wrapper that automatically includes credentials (cookies)
@@ -44,7 +43,7 @@ export const authAPI = {
       `${API_BASE_URL}/auth/login/options?username=${encodeURIComponent(username)}`,
       {
         method: "GET",
-      }
+      },
     );
   },
 
@@ -61,7 +60,7 @@ export const authAPI = {
       `${API_BASE_URL}/auth/register/options?username=${encodeURIComponent(username)}&name=${encodeURIComponent(name)}`,
       {
         method: "GET",
-      }
+      },
     );
   },
 
@@ -86,9 +85,28 @@ export const customerAPI = {
       method: "GET",
     });
   },
+
+  getAllCustomersFull: async () => {
+    return fetchWithCredentials(`${API_BASE_URL}/customers/predict`, {
+      method: "GET",
+    });
+  },
+
   getcustomerById: async (id) => {
     return fetchWithCredentials(`${API_BASE_URL}/customers/${id}`, {
       method: "GET",
+    });
+  },
+};
+
+export const predictionAPI = {
+  getPrediction: async (customerData, model) => {
+    return fetchWithCredentials(`${API_BASE_URL}/predict`, {
+      method: "POST",
+      body: JSON.stringify({
+        model: model,
+        data: customerData,
+      }),
     });
   },
 };

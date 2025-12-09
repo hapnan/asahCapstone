@@ -83,7 +83,7 @@ import {
 
 import { columns } from "./column";
 import { DraggableRow } from "./draggable-row";
-
+import { customerAPI, predictionAPI } from "@/lib/api";
 /**
  * MAIN COMPONENT
  * Fully identical to original logic
@@ -125,7 +125,7 @@ export function DataTable({
   const sensors = useSensors(
     useSensor(MouseSensor),
     useSensor(TouchSensor),
-    useSensor(KeyboardSensor)
+    useSensor(KeyboardSensor),
   );
 
   const filteredData = useMemo(() => {
@@ -142,7 +142,7 @@ export function DataTable({
     // Apply score range filtering (percentage-based)
     if (minScore !== "" || maxScore !== "") {
       result = result.filter((item) => {
-        const score = item.predictive_score_subscribe;
+        const score = item.predict?.[0]?.predictive_score_subscribe;
         if (score === undefined || score === null) return false;
 
         // Convert percentage input to decimal (e.g., 50 -> 0.5)
@@ -167,8 +167,8 @@ export function DataTable({
 
         // Handle numeric comparison
         if (sortField === "predictive_score_subscribe") {
-          aVal = parseFloat(aVal) || 0;
-          bVal = parseFloat(bVal) || 0;
+          aVal = parseFloat(a.predict?.[0]?.predictive_score_subscribe) || 0;
+          bVal = parseFloat(b.predict?.[0]?.predictive_score_subscribe) || 0;
         }
 
         if (aVal < bVal) return sortOrder === "asc" ? -1 : 1;
@@ -273,10 +273,10 @@ export function DataTable({
 
       // map local visible position to global index in `prev` data array
       const oldGlobal = prev.findIndex(
-        (item) => item.id.toString() === active.id
+        (item) => item.id.toString() === active.id,
       );
       const newGlobal = prev.findIndex(
-        (item) => item.id.toString() === over.id
+        (item) => item.id.toString() === over.id,
       );
 
       // safety: if not found, abort
@@ -289,6 +289,39 @@ export function DataTable({
 
       return next;
     });
+  }
+
+  /// predict function
+  async function predict(model) {
+    try {
+      const customerResponse = await customerAPI.getAllCustomersFull();
+      const customer = await customerResponse.json();
+
+      if (!customer || customer.length === 0) {
+        console.error("No customer data available for prediction.");
+        return;
+      }
+
+      const predictionResponse = await predictionAPI.getPrediction(
+        customer,
+        model,
+      );
+      const response = await predictionResponse.json();
+
+      // Update the table data with the new prediction results
+      if (response && Array.isArray(response)) {
+        const newCustomerResponse = await customerAPI.getAllCustomers();
+        const newCustomer = await newCustomerResponse.json();
+        setData(newCustomer);
+        // Reset to first page after data update
+        setPagination((p) => ({ ...p, pageIndex: 0 }));
+      }
+
+      return response;
+    } catch (error) {
+      console.error("Prediction failed:", error);
+      throw error;
+    }
   }
 
   // -------------------------------------------------------------------------
@@ -341,6 +374,14 @@ export function DataTable({
                 ))}
             </DropdownMenuContent>
           </DropdownMenu>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => predict("catboost")}
+          >
+            Predict
+          </Button>
 
           <Dialog open={isFilterOpen} onOpenChange={setIsFilterOpen}>
             <DialogTrigger asChild>
@@ -463,7 +504,7 @@ export function DataTable({
                           ? null
                           : flexRender(
                               h.column.columnDef.header,
-                              h.getContext()
+                              h.getContext(),
                             )}
                       </TableHead>
                     ))}
@@ -522,7 +563,7 @@ export function DataTable({
                       <TableCell key={cell.id}>
                         {flexRender(
                           cell.column.columnDef.cell,
-                          cell.getContext()
+                          cell.getContext(),
                         )}
                       </TableCell>
                     ))}

@@ -108,13 +108,22 @@ export const columns = [
   {
     accessorKey: "predictive_subscribe",
     header: "Prediction",
-    cell: ({ row }) => (
-      <Badge
-        className={`px-2 capitalize border ${subscribeColor[row.original.predictive_subscribe]}`}
-      >
-        {row.original.predictive_subscribe}
-      </Badge>
-    ),
+    cell: ({ row }) => {
+      const prediction = row.original.predict?.[0]?.predictive_subscribe;
+      return !prediction ? (
+        <Badge
+          className={`px-2 capitalize border bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-300`}
+        >
+          unknown
+        </Badge>
+      ) : (
+        <Badge
+          className={`px-2 capitalize border ${subscribeColor[prediction]}`}
+        >
+          {prediction}
+        </Badge>
+      );
+    },
   },
 
   // ====================================================================
@@ -123,11 +132,14 @@ export const columns = [
   {
     accessorKey: "predictive_score_subscribe",
     header: () => <div className="text-right pr-2">Score</div>,
-    cell: ({ row }) => (
-      <div className="text-right pr-2 font-medium">
-        {(row.original.predictive_score_subscribe * 100).toFixed(1)}%
-      </div>
-    ),
+    cell: ({ row }) => {
+      const score = row.original.predict?.[0]?.predictive_score_subscribe;
+      return (
+        <div className="text-right pr-2 font-medium">
+          {!score ? "N/A" : (score * 100).toFixed(1) + "%"}
+        </div>
+      );
+    },
   },
 
   // ====================================================================
