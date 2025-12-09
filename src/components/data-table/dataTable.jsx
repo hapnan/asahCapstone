@@ -24,7 +24,6 @@ import {
   getFacetedUniqueValues,
   getFilteredRowModel,
   getPaginationRowModel,
-  getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
 
@@ -81,7 +80,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { columns } from "./column";
 import { DraggableRow } from "./draggable-row";
 import { customerAPI, predictionAPI } from "@/lib/api";
 /**
