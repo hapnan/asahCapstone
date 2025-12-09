@@ -1,6 +1,7 @@
 // API configuration and utilitie
 
-export const API_BASE_URL = import.meta.env.BASE_API || "http://localhost:3000";
+export const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 /**
  * Custom fetch wrapper that automatically includes credentials (cookies)
