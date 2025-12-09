@@ -30,6 +30,16 @@ import {
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -78,11 +88,19 @@ import { DraggableRow } from "./draggable-row";
  * MAIN COMPONENT
  * Fully identical to original logic
  */
-export function DataTable({ data: initialData }) {
+export function DataTable({
+  data: initialData,
+  columns,
+  enableDrag = false,
+  enableSelect = false,
+  enableTabs = false,
+  tabs = [],
+}) {
   // -------------------------------------------------------------------------
   // STATE
   // -------------------------------------------------------------------------
   const [data, setData] = useState(() => initialData);
+  const [activeTab, setActiveTab] = useState(tabs[0]?.value ?? "all");
   const [rowSelection, setRowSelection] = useState({});
   const [columnVisibility, setColumnVisibility] = useState({});
   const [columnFilters, setColumnFilters] = useState([]);
@@ -91,6 +109,13 @@ export function DataTable({ data: initialData }) {
     pageIndex: 0,
     pageSize: 10,
   });
+
+  // Filter Dialog States
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [sortField, setSortField] = useState("");
+  const [sortOrder, setSortOrder] = useState("asc");
+  const [minScore, setMinScore] = useState("");
+  const [maxScore, setMaxScore] = useState("");
 
   const sortableId = useId();
 
@@ -103,13 +128,82 @@ export function DataTable({ data: initialData }) {
     useSensor(KeyboardSensor)
   );
 
+  const filteredData = useMemo(() => {
+    let result = data;
+
+    // Apply tab filtering
+    if (enableTabs) {
+      const tabInfo = tabs.find((t) => t.value === activeTab);
+      if (tabInfo && tabInfo.filterFn) {
+        result = result.filter(tabInfo.filterFn);
+      }
+    }
+
+    // Apply score range filtering (percentage-based)
+    if (minScore !== "" || maxScore !== "") {
+      result = result.filter((item) => {
+        const score = item.predictive_score_subscribe;
+        if (score === undefined || score === null) return false;
+
+        // Convert percentage input to decimal (e.g., 50 -> 0.5)
+        const min = minScore === "" ? -Infinity : parseFloat(minScore) / 100;
+        const max = maxScore === "" ? Infinity : parseFloat(maxScore) / 100;
+
+        return score >= min && score <= max;
+      });
+    }
+
+    // Apply sorting
+    if (sortField) {
+      result = [...result].sort((a, b) => {
+        let aVal = a[sortField];
+        let bVal = b[sortField];
+
+        // Handle string comparison for name
+        if (sortField === "name") {
+          aVal = (aVal || "").toLowerCase();
+          bVal = (bVal || "").toLowerCase();
+        }
+
+        // Handle numeric comparison
+        if (sortField === "predictive_score_subscribe") {
+          aVal = parseFloat(aVal) || 0;
+          bVal = parseFloat(bVal) || 0;
+        }
+
+        if (aVal < bVal) return sortOrder === "asc" ? -1 : 1;
+        if (aVal > bVal) return sortOrder === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return result;
+  }, [
+    data,
+    activeTab,
+    enableTabs,
+    tabs,
+    minScore,
+    maxScore,
+    sortField,
+    sortOrder,
+  ]);
+
+  const finalColumns = useMemo(() => {
+    let cols = [...columns];
+    if (!enableDrag) cols = cols.filter((c) => c.id !== "drag");
+    if (!enableSelect) cols = cols.filter((c) => c.id !== "select");
+
+    return cols;
+  }, [columns, enableDrag, enableSelect]);
+
   // const dataIds = useMemo(() => data?.map(({ id }) => id) || [], [data]);
   // -------------------------------------------------------------------------
   // TABLE INITIALIZATION
   // -------------------------------------------------------------------------
   const table = useReactTable({
-    data,
-    columns,
+    data: filteredData,
+    columns: finalColumns,
     state: {
       sorting,
       columnVisibility,
@@ -135,18 +229,32 @@ export function DataTable({ data: initialData }) {
     getFacetedUniqueValues: getFacetedUniqueValues(),
   });
   const paginatedRows = table.getPaginationRowModel().rows;
-  const visibleRowIds = useMemo(
-    () => paginatedRows.map((r) => r.id),
-    [paginatedRows]
-  );
+  const visibleRowIds = paginatedRows.map((r) => r.id);
 
   useEffect(() => {
     const pageCount = table.getPageCount();
-    if (pagination.pageIndex > 0 && pagination.pageIndex >= pageCount) {
+    if (pagination.pageIndex >= pageCount) {
       setPagination((p) => ({ ...p, pageIndex: Math.max(0, pageCount - 1) }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [table.getPageCount(), data.length]);
+  }, [filteredData.length]);
+
+  // -------------------------------------------------------------------------
+  // FILTER HANDLERS
+  // -------------------------------------------------------------------------
+  const handleApplyFilter = () => {
+    setIsFilterOpen(false);
+    // Reset to first page when filter is applied
+    setPagination((p) => ({ ...p, pageIndex: 0 }));
+  };
+
+  const handleResetFilter = () => {
+    setSortField("");
+    setSortOrder("asc");
+    setMinScore("");
+    setMaxScore("");
+    setPagination((p) => ({ ...p, pageIndex: 0 }));
+  };
 
   // -------------------------------------------------------------------------
   // DND HANDLER (fully original)
@@ -155,9 +263,7 @@ export function DataTable({ data: initialData }) {
     if (!over || active.id === over.id) return;
 
     setData((prev) => {
-      const currentVisible = table
-        .getPaginationRowModel()
-        .rows.map((r) => r.id);
+      const currentVisible = paginatedRows.map((r) => r.id);
 
       const oldLocal = currentVisible.indexOf(active.id);
       const newLocal = currentVisible.indexOf(over.id);
@@ -167,17 +273,17 @@ export function DataTable({ data: initialData }) {
 
       // map local visible position to global index in `prev` data array
       const oldGlobal = prev.findIndex(
-        (d) => String(d.id) === String(currentVisible[oldLocal])
+        (item) => item.id.toString() === active.id
       );
       const newGlobal = prev.findIndex(
-        (d) => String(d.id) === String(currentVisible[newLocal])
+        (item) => item.id.toString() === over.id
       );
 
       // safety: if not found, abort
       if (oldGlobal === -1 || newGlobal === -1) return prev;
 
-      // if nothing changes, return prev
-      if (oldGlobal === newGlobal) return prev;
+      // // if nothing changes, return prev
+      // if (oldGlobal === newGlobal) return prev;
 
       const next = arrayMove(prev, oldGlobal, newGlobal);
 
@@ -189,52 +295,33 @@ export function DataTable({ data: initialData }) {
   // RENDER
   // -------------------------------------------------------------------------
   return (
-    <Tabs
-      defaultValue="outline"
-      className="w-full flex-col justify-start gap-6"
-    >
-      {/** --------------------- HEADER / CONTROLS ---------------------- **/}
-      <div className="flex items-center justify-between px-4 lg:px-6">
-        <Label htmlFor="view-selector" className="sr-only">
-          View
-        </Label>
+    <div className="flex flex-col gap-4 w-full px-7">
+      {/* =============== TABS IF ENABLED =============== */}
+      <div className="flex justify-between w-full">
+        {enableTabs && (
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList>
+              {tabs.map((tab) => (
+                <TabsTrigger key={tab.value} value={tab.value}>
+                  {tab.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
 
-        <Select defaultValue="outline">
-          <SelectTrigger
-            className="flex w-fit @4xl/main:hidden"
-            size="sm"
-            id="view-selector"
-          >
-            <SelectValue placeholder="Select a view" />
-          </SelectTrigger>
+            {/* CONTENT WRAPPER */}
+            {/* <TabsContent value={activeTab}> */}
+            {/* Table will render below */}
+            {/* </TabsContent> */}
+          </Tabs>
+        )}
 
-          <SelectContent>
-            <SelectItem value="outline">Outline</SelectItem>
-            <SelectItem value="past-performance">Past Performance</SelectItem>
-            <SelectItem value="key-personnel">Key Personnel</SelectItem>
-            <SelectItem value="focus-documents">Focus Documents</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <TabsList className="**:data-[slot=badge]:bg-muted-foreground/30 hidden **:data-[slot=badge]:size-5 **:data-[slot=badge]:rounded-full **:data-[slot=badge]:px-1 @4xl/main:flex">
-          <TabsTrigger value="outline">Outline</TabsTrigger>
-          <TabsTrigger value="past-performance">
-            Past Performance <Badge variant="secondary">3</Badge>
-          </TabsTrigger>
-          <TabsTrigger value="key-personnel">
-            Key Personnel <Badge variant="secondary">2</Badge>
-          </TabsTrigger>
-          <TabsTrigger value="focus-documents">Focus Documents</TabsTrigger>
-        </TabsList>
-
-        <div className="flex items-center gap-2">
-          {/** CUSTOMIZE COLUMNS */}
+        {/* =============== HEADER CONTROLS =============== */}
+        <div className="flex items-center gap-2 px-4">
+          {/* Customize Columns */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
                 <IconLayoutColumns />
-                <span className="hidden lg:inline">Customize Columns</span>
-                <span className="lg:hidden">Columns</span>
                 <IconChevronDown />
               </Button>
             </DropdownMenuTrigger>
@@ -242,59 +329,141 @@ export function DataTable({ data: initialData }) {
             <DropdownMenuContent align="end" className="w-56">
               {table
                 .getAllColumns()
-                .filter(
-                  (column) =>
-                    typeof column.accessorFn !== "undefined" &&
-                    column.getCanHide()
-                )
-                .map((column) => {
-                  return (
-                    <DropdownMenuCheckboxItem
-                      key={column.id}
-                      className="capitalize"
-                      checked={column.getIsVisible()}
-                      onCheckedChange={(value) =>
-                        column.toggleVisibility(!!value)
-                      }
-                    >
-                      {column.id}
-                    </DropdownMenuCheckboxItem>
-                  );
-                })}
+                .filter((c) => c.getCanHide())
+                .map((col) => (
+                  <DropdownMenuCheckboxItem
+                    key={col.id}
+                    checked={col.getIsVisible()}
+                    onCheckedChange={(v) => col.toggleVisibility(!!v)}
+                  >
+                    {col.id}
+                  </DropdownMenuCheckboxItem>
+                ))}
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Button variant="outline" size="sm">
-            <IconAdjustmentsHorizontal />
-            <span className="hidden lg:inline">Filter Table</span>
-          </Button>
+          <Dialog open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm">
+                <IconAdjustmentsHorizontal /> Filter
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle>Filter & Sort Data</DialogTitle>
+                <DialogDescription>
+                  Atur sorting dan filtering untuk tabel data
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="grid gap-6 py-4">
+                {/* Sorting Section */}
+                <div className="space-y-4">
+                  <h4 className="font-medium text-sm">Sorting</h4>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="sortField">Sort By</Label>
+                      <Select value={sortField} onValueChange={setSortField}>
+                        <SelectTrigger id="sortField">
+                          <SelectValue placeholder="Pilih field" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">None</SelectItem>
+                          <SelectItem value="name">Name</SelectItem>
+                          <SelectItem value="predictive_score_subscribe">
+                            Predictive Score
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="sortOrder">Order</Label>
+                      <Select value={sortOrder} onValueChange={setSortOrder}>
+                        <SelectTrigger id="sortOrder">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="asc">Ascending</SelectItem>
+                          <SelectItem value="desc">Descending</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Filtering Section */}
+                <div className="space-y-4">
+                  <h4 className="font-medium text-sm">
+                    Filter by Predictive Score Range (%)
+                  </h4>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="minScore">Minimum Score (%)</Label>
+                      <Input
+                        id="minScore"
+                        type="number"
+                        placeholder="0"
+                        value={minScore}
+                        onChange={(e) => setMinScore(e.target.value)}
+                        step="1"
+                        min="0"
+                        max="100"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="maxScore">Maximum Score (%)</Label>
+                      <Input
+                        id="maxScore"
+                        type="number"
+                        placeholder="100"
+                        value={maxScore}
+                        onChange={(e) => setMaxScore(e.target.value)}
+                        step="1"
+                        min="0"
+                        max="100"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <DialogFooter>
+                <Button variant="outline" onClick={handleResetFilter}>
+                  Reset
+                </Button>
+                <Button onClick={handleApplyFilter}>Apply Filter</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
-
-      {/** --------------------- TAB: OUTLINE --------------------------- **/}
-      <TabsContent
-        value="outline"
-        className="relative flex flex-col gap-4 overflow-auto px-4 lg:px-6"
-      >
-        <div className="overflow-hidden rounded-lg border">
+      {/* =============== TABLE WRAPPER =============== */}
+      <div className="overflow-hidden rounded-lg border">
+        {enableDrag ? (
+          // ---------- With Drag ----------
           <DndContext
+            sensors={sensors}
             collisionDetection={closestCenter}
             modifiers={[restrictToVerticalAxis]}
             onDragEnd={handleDragEnd}
-            sensors={sensors}
             id={sortableId}
           >
-            <Table>
-              <TableHeader className="bg-muted sticky top-0 z-10">
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <TableHead key={header.id} colSpan={header.colSpan}>
-                        {header.isPlaceholder
+            <Table key={finalColumns.map((c) => c.id).join("_")}>
+              {/* Header */}
+              <TableHeader className="sticky top-0 bg-muted z-10">
+                {table.getHeaderGroups().map((hg) => (
+                  <TableRow key={hg.id}>
+                    {hg.headers.map((h) => (
+                      <TableHead key={h.id}>
+                        {h.isPlaceholder
                           ? null
                           : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
+                              h.column.columnDef.header,
+                              h.getContext()
                             )}
                       </TableHead>
                     ))}
@@ -302,143 +471,141 @@ export function DataTable({ data: initialData }) {
                 ))}
               </TableHeader>
 
-              <TableBody className="**:data-[slot=table-cell]:first:w-8">
-                {table.getPaginationRowModel().rows?.length ? (
-                  <SortableContext
-                    key={JSON.stringify({
-                      sel: table.getState().rowSelection,
-                      vis: table.getState().columnVisibility,
-                      pag: table.getState().pagination,
-                    })}
-                    items={visibleRowIds}
-                    strategy={verticalListSortingStrategy}
-                  >
-                    {table.getPaginationRowModel().rows.map((row) => (
+              {/* Body with draggable row */}
+              <TableBody>
+                <SortableContext
+                  items={visibleRowIds}
+                  strategy={verticalListSortingStrategy}
+                  key={JSON.stringify({
+                    sel: table.getState().rowSelection,
+                    vis: table.getState().columnVisibility,
+                  })}
+                >
+                  {paginatedRows.length ? (
+                    paginatedRows.map((row) => (
                       <DraggableRow key={row.id} row={row} />
-                    ))}
-                  </SortableContext>
-                ) : (
-                  <TableRow>
-                    <TableCell
-                      colSpan={columns.length}
-                      className="h-24 text-center"
-                    >
-                      No results.
-                    </TableCell>
-                  </TableRow>
-                )}
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell
+                        colSpan={finalColumns.length}
+                        className="text-center py-6"
+                      >
+                        No data available
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </SortableContext>
               </TableBody>
             </Table>
           </DndContext>
-        </div>
-
-        {/** --------------------- PAGINATION ---------------------------- **/}
-        <div className="flex items-center justify-between px-4">
-          <div className="text-muted-foreground hidden flex-1 text-sm lg:flex">
-            {table.getFilteredSelectedRowModel().rows.length} of{" "}
-            {table.getFilteredRowModel().rows.length} row(s) selected.
-          </div>
-
-          <div className="flex w-full items-center gap-8 lg:w-fit">
-            {/** Rows per page */}
-            <div className="hidden items-center gap-2 lg:flex">
-              <Label htmlFor="rows-per-page" className="text-sm font-medium">
-                Rows per page
-              </Label>
-              <Select
-                value={`${table.getState().pagination.pageSize}`}
-                onValueChange={(value) => {
-                  table.setPageSize(Number(value));
-                }}
-              >
-                <SelectTrigger size="sm" className="w-20" id="rows-per-page">
-                  <SelectValue
-                    placeholder={table.getState().pagination.pageSize}
-                  />
-                </SelectTrigger>
-                <SelectContent side="top">
-                  {[10, 20, 30, 40, 50].map((pageSize) => (
-                    <SelectItem key={pageSize} value={`${pageSize}`}>
-                      {pageSize}
-                    </SelectItem>
+        ) : (
+          // ---------- No Drag ----------
+          <Table>
+            <TableHeader className="sticky top-0 bg-muted z-10">
+              {table.getHeaderGroups().map((hg) => (
+                <TableRow key={hg.id}>
+                  {hg.headers.map((h) => (
+                    <TableHead key={h.id}>
+                      {flexRender(h.column.columnDef.header, h.getContext())}
+                    </TableHead>
                   ))}
-                </SelectContent>
-              </Select>
-            </div>
+                </TableRow>
+              ))}
+            </TableHeader>
 
-            {/** Page X of Y */}
-            <div className="flex w-fit items-center justify-center text-sm font-medium">
-              Page {table.getState().pagination.pageIndex + 1} of{" "}
-              {table.getPageCount()}
-            </div>
+            <TableBody>
+              {paginatedRows.length ? (
+                paginatedRows.map((row) => (
+                  <TableRow key={row.id}>
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={finalColumns.length}
+                    className="text-center py-6"
+                  >
+                    No data available
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        )}
+      </div>
 
-            {/** Navigation */}
-            <div className="ml-auto flex items-center gap-2 lg:ml-0">
-              <Button
-                variant="outline"
-                className="hidden h-8 w-8 p-0 lg:flex"
-                onClick={() => table.setPageIndex(0)}
-                disabled={!table.getCanPreviousPage()}
-              >
-                <span className="sr-only">Go to first page</span>
-                <IconChevronsLeft />
-              </Button>
-
-              <Button
-                variant="outline"
-                className="size-8"
-                size="icon"
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
-              >
-                <span className="sr-only">Go to previous page</span>
-                <IconChevronLeft />
-              </Button>
-
-              <Button
-                variant="outline"
-                className="size-8"
-                size="icon"
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
-              >
-                <span className="sr-only">Go to next page</span>
-                <IconChevronRight />
-              </Button>
-
-              <Button
-                variant="outline"
-                className="hidden size-8 lg:flex"
-                size="icon"
-                onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                disabled={!table.getCanNextPage()}
-              >
-                <span className="sr-only">Go to last page</span>
-                <IconChevronsRight />
-              </Button>
-            </div>
-          </div>
+      {/* =============== PAGINATION =============== */}
+      <div className="flex justify-between px-4 items-center">
+        {/* Rows per page */}
+        <div className="hidden lg:flex items-center gap-2">
+          <Label>Rows</Label>
+          <Select
+            value={`${pagination.pageSize}`}
+            onValueChange={(v) => table.setPageSize(Number(v))}
+          >
+            <SelectTrigger className="w-20">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {[10, 20, 30, 40, 50].map((size) => (
+                <SelectItem key={size} value={`${size}`}>
+                  {size}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-      </TabsContent>
 
-      {/** --------------------- OTHER TABS --------------------------- **/}
-      <TabsContent
-        value="past-performance"
-        className="flex flex-col px-4 lg:px-6"
-      >
-        <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
-      </TabsContent>
+        {/* Page count */}
+        <div className="text-sm font-medium">
+          Page {pagination.pageIndex + 1} of {table.getPageCount()}
+        </div>
 
-      <TabsContent value="key-personnel" className="flex flex-col px-4 lg:px-6">
-        <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
-      </TabsContent>
-
-      <TabsContent
-        value="focus-documents"
-        className="flex flex-col px-4 lg:px-6"
-      >
-        <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
-      </TabsContent>
-    </Tabs>
+        {/* Navigation */}
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => table.setPageIndex(0)}
+            disabled={!table.getCanPreviousPage()}
+          >
+            <IconChevronsLeft />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+          >
+            <IconChevronLeft />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+          >
+            <IconChevronRight />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+            disabled={!table.getCanNextPage()}
+          >
+            <IconChevronsRight />
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 }

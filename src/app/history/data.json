@@ -1,0 +1,84 @@
+{
+  "calloutHistory": [
+    {
+      "id": "CH001",
+      "name": "Budi Santoso",
+      "phoneNumber": "081234567890",
+      "orderStatus": "Akan berlangganan",
+      "callTime": "2024-11-28T10:30:00",
+      "notes": "Customer tertarik dengan paket premium, akan melakukan pembayaran minggu depan"
+    },
+    {
+      "id": "CH002",
+      "name": "Siti Aminah",
+      "phoneNumber": "082345678901",
+      "orderStatus": "Masih memikirkan",
+      "callTime": "2024-11-28T14:15:00",
+      "notes": "Perlu waktu untuk diskusi dengan keluarga, akan dihubungi kembali dalam 3 hari"
+    },
+    {
+      "id": "CH003",
+      "name": "Ahmad Fauzi",
+      "phoneNumber": "083456789012",
+      "orderStatus": "Pelanggan skip",
+      "callTime": "2024-11-27T09:00:00",
+      "notes": "Tidak tertarik dengan layanan saat ini"
+    },
+    {
+      "id": "CH004",
+      "name": "Dewi Lestari",
+      "phoneNumber": "084567890123",
+      "orderStatus": "Akan berlangganan",
+      "callTime": "2024-11-27T16:45:00",
+      "notes": "Sudah deal dengan paket basic, menunggu email konfirmasi"
+    },
+    {
+      "id": "CH005",
+      "name": "Rudi Hartono",
+      "phoneNumber": "085678901234",
+      "orderStatus": "Masih memikirkan",
+      "callTime": "2024-11-26T11:20:00",
+      "notes": "Ingin membandingkan dengan kompetitor terlebih dahulu"
+    },
+    {
+      "id": "CH006",
+      "name": "Lisa Wijaya",
+      "phoneNumber": "086789012345",
+      "orderStatus": "Akan berlangganan",
+      "callTime": "2024-11-26T13:30:00",
+      "notes": "Tertarik dengan promo bundling, akan transfer hari ini"
+    },
+    {
+      "id": "CH007",
+      "name": "Andi Pratama",
+      "phoneNumber": "087890123456",
+      "orderStatus": "Pelanggan skip",
+      "callTime": "2024-11-25T10:00:00",
+      "notes": "Sudah berlangganan dengan kompetitor"
+    },
+    {
+      "id": "CH008",
+      "name": "Maya Sari",
+      "phoneNumber": "088901234567",
+      "orderStatus": "Masih memikirkan",
+      "callTime": "2024-11-25T15:45:00",
+      "notes": "Menunggu budget approval dari perusahaan"
+    },
+    {
+      "id": "CH009",
+      "name": "Hendra Gunawan",
+      "phoneNumber": "089012345678",
+      "orderStatus": "Akan berlangganan",
+      "callTime": "2024-11-24T09:15:00",
+      "notes": "Sangat tertarik, akan ke kantor untuk melengkapi dokumen"
+    },
+    {
+      "id": "CH010",
+      "name": "Nina Kusuma",
+      "phoneNumber": "081123456789",
+      "orderStatus": "Pelanggan skip",
+      "callTime": "2024-11-24T14:00:00",
+      "notes": "Budget tidak mencukupi untuk saat ini"
+    }
+  ]
+}

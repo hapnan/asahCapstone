@@ -44,13 +44,13 @@ export default function TableCellViewer({ item }) {
           variant="link"
           className="text-foreground w-fit px-0 text-left cursor-pointer"
         >
-          {item.header}
+          {item.name}
         </Button>
       </DrawerTrigger>
 
       <DrawerContent>
         <DrawerHeader className="gap-1">
-          <DrawerTitle>{item.header}</DrawerTitle>
+          <DrawerTitle>{item.name}</DrawerTitle>
           <DrawerDescription>
             Showing total visitors for the last 6 months
           </DrawerDescription>
