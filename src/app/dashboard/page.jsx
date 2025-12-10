@@ -44,17 +44,20 @@ export default function Page() {
               {
                 value: "failure",
                 label: "Failure",
-                filterFn: (row) => row.predictive_subscribe === "failure",
+                filterFn: (row) =>
+                  row.predict?.[0]?.predictive_subscribe === "failure",
               },
               {
                 value: "nonexistent",
                 label: "Nonexistent",
-                filterFn: (row) => row.predictive_subscribe === "nonexistent",
+                filterFn: (row) =>
+                  row.predict?.[0]?.predictive_subscribe === "nonexistent",
               },
               {
                 value: "success",
                 label: "Success",
-                filterFn: (row) => row.predictive_subscribe === "success",
+                filterFn: (row) =>
+                  row.predict?.[0]?.predictive_subscribe === "success",
               },
             ]}
           />
