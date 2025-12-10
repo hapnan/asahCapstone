@@ -148,16 +148,18 @@ export default function TableCellViewer({ item }) {
                       Predictive Subscribe
                     </Label>
                     <Badge className="w-fit px-2 capitalize" variant="outline">
-                      {detail.predict?.[0].predictive_subscribe}
+                      {detail.predict?.[0]?.predictive_subscribe || "N/A"}
                     </Badge>
                   </div>
 
                   <Info
                     label="Subscribe Score"
                     value={
-                      (
-                        detail.predict?.[0].predictive_score_subscribe * 100
-                      ).toFixed(1) + "%"
+                      detail.predict?.[0]?.predictive_score_subscribe
+                        ? (
+                            detail.predict[0].predictive_score_subscribe * 100
+                          ).toFixed(1) + "%"
+                        : "N/A"
                     }
                   />
                 </div>
