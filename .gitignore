@@ -24,3 +24,8 @@ dist-ssr
 *.sw?
 BACKEND_AUTH_GUIDE.md
 COOKIE_AUTH_MIGRATION.md
+
+
+# Environment variables
+.env
+.env.local
