@@ -102,13 +102,10 @@ export const customerAPI = {
 };
 
 export const predictionAPI = {
-  getPrediction: async (customerData, model) => {
+  getPrediction: async (customerData) => {
     return fetchWithCredentials(`${API_BASE_URL}/predict`, {
       method: "POST",
-      body: JSON.stringify({
-        model: model,
-        data: customerData,
-      }),
+      body: JSON.stringify(customerData),
     });
   },
 };

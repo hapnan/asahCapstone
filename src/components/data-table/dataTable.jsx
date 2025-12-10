@@ -290,7 +290,7 @@ export function DataTable({
   }
 
   /// predict function
-  async function predict(model) {
+  async function predict() {
     try {
       const customerResponse = await customerAPI.getAllCustomersFull();
       const customer = await customerResponse.json();
@@ -300,10 +300,7 @@ export function DataTable({
         return;
       }
 
-      const predictionResponse = await predictionAPI.getPrediction(
-        customer,
-        model,
-      );
+      const predictionResponse = await predictionAPI.getPrediction(customer);
       const response = await predictionResponse.json();
 
       // Update the table data with the new prediction results
@@ -373,11 +370,7 @@ export function DataTable({
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => predict("catboost")}
-          >
+          <Button variant="outline" size="sm" onClick={() => predict()}>
             Predict
           </Button>
 
