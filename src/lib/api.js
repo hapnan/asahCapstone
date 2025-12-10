@@ -105,7 +105,9 @@ export const predictionAPI = {
   getPrediction: async (customerData) => {
     return fetchWithCredentials(`${API_BASE_URL}/predict`, {
       method: "POST",
-      body: JSON.stringify(customerData),
+      body: JSON.stringify({
+        data: customerData,
+      }),
     });
   },
 };
