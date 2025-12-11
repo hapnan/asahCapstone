@@ -9,7 +9,17 @@ import {
 import { Device } from "@twilio/voice-sdk";
 import { voiceAPI } from "./api";
 
-import { CallState } from "./twilioCallState";
+/**
+ * Call states
+ */
+export const CallState = {
+  DISCONNECTED: "Disconnected",
+  READY: "Ready",
+  CONNECTING: "Connecting",
+  ON_CALL: "OnCall",
+  INCOMING: "Incoming",
+  ERROR: "Error",
+};
 
 const TwilioContext = createContext(null);
 
