@@ -111,3 +111,24 @@ export const predictionAPI = {
     });
   },
 };
+
+export const reportAPI = {
+  getReport: async () => {
+    return fetchWithCredentials(`${API_BASE_URL}/analitics`, {
+      method: "GET",
+    });
+  },
+
+  getReportById: async (id) => {
+    return fetchWithCredentials(`${API_BASE_URL}/analitics/${id}`, {
+      method: "GET",
+    });
+  },
+
+  addReport: async (reportData) => {
+    return fetchWithCredentials(`${API_BASE_URL}/analitics`, {
+      method: "POST",
+      body: JSON.stringify(reportData),
+    });
+  },
+};

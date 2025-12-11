@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import TableCellViewer from "@/components/data-table/table-cell-viewer-dashboard";
 
-import { IconDotsVertical } from "@tabler/icons-react";
+import { IconPhone } from "@tabler/icons-react";
 
 // OPTIONAL: Color helpers for predictive status
 const subscribeColor = {
@@ -149,24 +149,11 @@ export const columns = [
     id: "actions",
     enableHiding: false,
     cell: () => (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            className="size-8 p-0 flex items-center justify-center text-muted-foreground"
-          >
-            <IconDotsVertical size={18} />
-          </Button>
-        </DropdownMenuTrigger>
-
-        <DropdownMenuContent align="end" className="w-32">
-          <DropdownMenuItem>Edit</DropdownMenuItem>
-          <DropdownMenuItem>Make a copy</DropdownMenuItem>
-          <DropdownMenuItem>Favorite</DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem variant="destructive">Delete</DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <div className="w-full flex justify-center">
+        <Button variant="secondary">
+          <IconPhone size={18} /> Call
+        </Button>
+      </div>
     ),
   },
 ];

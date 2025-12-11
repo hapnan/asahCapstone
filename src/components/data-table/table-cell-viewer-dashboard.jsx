@@ -17,7 +17,8 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 
 import { useIsMobile } from "@/hooks/use-mobile";
-import { customerAPI } from "@/lib/api";
+import { customerAPI, reportAPI } from "@/lib/api";
+import { toast } from "sonner";
 
 export default function TableCellViewer({ item }) {
   const isMobile = useIsMobile();
@@ -45,6 +46,52 @@ export default function TableCellViewer({ item }) {
 
     fetchDetail();
   }, [open, item.id]);
+
+  async function handleButton(status, id) {
+    if (status === "accept") {
+      const res = await reportAPI.addReport({
+        id_customer: id,
+        status: "success",
+      });
+
+      if (!res.ok) {
+        toast.error("Failed to add to db");
+        return;
+      }
+      const data = await res.json();
+
+      data
+        ? toast.success("Customer accepted ")
+        : toast.error("Failed to add to db");
+    } else if (status === "reject") {
+      const res = await reportAPI.addReport({
+        customer_id: id,
+        action: "failure",
+      });
+
+      if (!res.ok) {
+        toast.error("Failed to adding to db");
+        return;
+      }
+      const data = await res.json();
+      data
+        ? toast.success("Customer rejected ")
+        : toast.error("Failed to adding to db");
+    } else {
+      const res = await reportAPI.addReport({
+        customer_id: id,
+        action: "nonexistent",
+      });
+      if (!res.ok) {
+        toast.error("Failed to adding to db");
+        return;
+      }
+      const data = await res.json();
+      data
+        ? toast.success("Customer nonexistent ")
+        : toast.error("Failed to adding to db");
+    }
+  }
 
   return (
     <Drawer
@@ -169,6 +216,29 @@ export default function TableCellViewer({ item }) {
         </div>
 
         <DrawerFooter>
+          <div className="w-full flex flex-row gap-2.5">
+            <Button
+              variant="default"
+              onClick={() => handleButton("accept", detail.id)}
+              className="flex-1"
+            >
+              Accept
+            </Button>
+            <Button
+              variant="default"
+              onClick={() => handleButton("panding", detail.id)}
+              className="flex-1"
+            >
+              Non Existent
+            </Button>
+            <Button
+              variant="destructive"
+              className="flex-1"
+              onClick={() => handleButton("reject", detail.id)}
+            >
+              Reject
+            </Button>
+          </div>
           <DrawerClose asChild>
             <Button variant="outline">Close</Button>
           </DrawerClose>
