@@ -122,7 +122,7 @@ export function TwilioProvider({ children }) {
         const device = new Device(tokenRef.current, {
           logLevel: 1, // Debug logging
           codecPreferences: ["opus", "pcmu"],
-          edge: "ashburn",
+          edge: "roaming",
           allowIncomingWhileBusy: false,
         });
 
