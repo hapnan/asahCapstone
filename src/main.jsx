@@ -7,7 +7,6 @@ import { TwilioProvider } from "./lib/twilioContext.jsx";
 import { routeTree } from "./routeTree.gen";
 import "./index.css";
 import { Toaster } from "@/components/ui/sonner";
-import { CallStatusWidget } from "@/components/CallStatusWidget";
 
 const router = createRouter({
   routeTree,
@@ -19,12 +18,7 @@ const router = createRouter({
 function App() {
   const auth = useAuth();
 
-  return (
-    <>
-      <RouterProvider router={router} context={{ auth }} />
-      <CallStatusWidget />
-    </>
-  );
+  return <RouterProvider router={router} context={{ auth }} />;
 }
 
 ReactDOM.createRoot(document.getElementById("root")).render(
