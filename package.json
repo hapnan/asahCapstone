@@ -33,6 +33,7 @@
     "@tanstack/react-router": "^1.136.11",
     "@tanstack/react-router-devtools": "^1.136.11",
     "@tanstack/react-table": "^8.21.3",
+    "@twilio/voice-sdk": "^2.17.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dotenv": "^17.2.3",

@@ -132,3 +132,15 @@ export const reportAPI = {
     });
   },
 };
+
+/**
+ * API endpoints for Twilio Voice
+ */
+export const voiceAPI = {
+  // Get access token for Twilio Device
+  getToken: async () => {
+    return fetchWithCredentials(`${API_BASE_URL}/voice/token`, {
+      method: "GET",
+    });
+  },
+};

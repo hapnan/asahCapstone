@@ -1,7 +1,7 @@
 import { DragHandle } from "@/components/data-table/drag-handle";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { CallButton } from "@/components/CallButtonCompact";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -143,17 +143,24 @@ export const columns = [
   },
 
   // ====================================================================
-  // ACTIONS MENU (EDIT / DELETE)
+  // ACTIONS - CALL BUTTON
   // ====================================================================
   {
     id: "actions",
     enableHiding: false,
-    cell: () => (
-      <div className="w-full flex justify-center">
-        <Button variant="secondary">
-          <IconPhone size={18} /> Call
-        </Button>
-      </div>
-    ),
+    cell: ({ row }) => {
+      // Get phone number from row data (adjust field name as needed)
+      const phoneNumber = "+6287779647380";
+
+      return (
+        <div className="w-full flex justify-center">
+          {phoneNumber ? (
+            <CallButton phoneNumber={phoneNumber} size="sm" variant="ghost" />
+          ) : (
+            <span className="text-xs text-muted-foreground">No phone</span>
+          )}
+        </div>
+      );
+    },
   },
 ];
