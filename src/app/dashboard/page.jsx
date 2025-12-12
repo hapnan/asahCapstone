@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { ChartAreaInteractive } from "@/components/chart-area-interactive";
 import { DataTable } from "@/components/data-table/dataTable";
 import { SectionCards } from "@/components/section-cards";
+import { LoadingSkeleton } from "@/components/loading-skeleton";
 // import { columns } from "@/components/data-table/column";
 import { columns } from "@/app/dashboard/columns";
 import { customerAPI } from "@/lib/api";
@@ -23,7 +24,7 @@ export default function Page() {
     fetchCustomers();
   }, []);
 
-  if (loading) return <p>Loading Data ...</p>;
+  if (loading) return <LoadingSkeleton />;
 
   return (
     <div className="flex flex-1 flex-col">

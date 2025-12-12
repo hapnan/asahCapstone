@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 
 import { useIsMobile } from "@/hooks/use-mobile";
 import { customerAPI, reportAPI } from "@/lib/api";
@@ -118,9 +119,56 @@ export default function TableCellViewer({ item }) {
 
         <div className="flex flex-col gap-6 px-4 py-2 overflow-y-auto text-sm">
           {loading && (
-            <div className="text-center py-10 text-muted-foreground">
-              Loading details...
-            </div>
+            <>
+              {/* BASIC INFORMATION SKELETON */}
+              <section className="space-y-3">
+                <Skeleton className="h-5 w-[160px]" />
+                <div className="grid grid-cols-2 gap-3">
+                  {Array.from({ length: 8 }).map((_, index) => (
+                    <div key={index} className="flex flex-col gap-1">
+                      <Skeleton className="h-3 w-[80px]" />
+                      <Skeleton className="h-4 w-[100px]" />
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <Separator />
+
+              {/* CONTACT HISTORY SKELETON */}
+              <section className="space-y-3">
+                <Skeleton className="h-5 w-[140px]" />
+                <div className="grid grid-cols-2 gap-3">
+                  {Array.from({ length: 5 }).map((_, index) => (
+                    <div key={index} className="flex flex-col gap-1">
+                      <Skeleton className="h-3 w-[100px]" />
+                      <Skeleton className="h-4 w-[80px]" />
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <Separator />
+
+              {/* CAMPAIGN RESULT SKELETON */}
+              <section className="space-y-3">
+                <Skeleton className="h-5 w-[150px]" />
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-1">
+                    <Skeleton className="h-3 w-[120px]" />
+                    <Skeleton className="h-4 w-[90px]" />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <Skeleton className="h-3 w-[130px]" />
+                    <Skeleton className="h-5 w-[100px]" />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <Skeleton className="h-3 w-[110px]" />
+                    <Skeleton className="h-4 w-[70px]" />
+                  </div>
+                </div>
+              </section>
+            </>
           )}
 
           {!loading && (
