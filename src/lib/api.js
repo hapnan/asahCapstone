@@ -113,14 +113,14 @@ export const predictionAPI = {
 };
 
 export const reportAPI = {
-  getReport: async () => {
+  getAllReports: async () => {
     return fetchWithCredentials(`${API_BASE_URL}/analitics`, {
       method: "GET",
     });
   },
 
-  getReportById: async (id) => {
-    return fetchWithCredentials(`${API_BASE_URL}/analitics/${id}`, {
+  getReportById: async () => {
+    return fetchWithCredentials(`${API_BASE_URL}/analitics/user`, {
       method: "GET",
     });
   },
@@ -140,6 +140,14 @@ export const voiceAPI = {
   // Get access token for Twilio Device
   getToken: async () => {
     return fetchWithCredentials(`${API_BASE_URL}/voice/token`, {
+      method: "GET",
+    });
+  },
+};
+
+export const userAPI = {
+  getUser: async () => {
+    return fetchWithCredentials(`${API_BASE_URL}/user`, {
       method: "GET",
     });
   },

@@ -17,10 +17,7 @@ import {
   IconSettings,
   IconUsers,
 } from "@tabler/icons-react";
-
-import { NavDocuments } from "@/components/nav-documents";
 import { NavMain } from "@/components/nav-main";
-import { NavSecondary } from "@/components/nav-secondary";
 import { NavUser } from "@/components/nav-user";
 import {
   Sidebar,
@@ -31,6 +28,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { Skeleton } from "@/components/ui/skeleton";
+import { userAPI } from "@/lib/api";
 
 const data = {
   user: {
@@ -140,6 +139,68 @@ const data = {
 };
 
 export function AppSidebar({ ...props }) {
+  const [user, setUser] = React.useState();
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await userAPI.getUser();
+        const userres = await response.json();
+        setUser(userres.data.user);
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
+  if (loading) {
+    return (
+      <Sidebar collapsible="offcanvas" {...props}>
+        <SidebarHeader>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                className="data-[slot=sidebar-menu-button]:p-1.5!"
+                disabled
+              >
+                <Skeleton className="size-5 rounded" />
+                <Skeleton className="h-4 w-[120px]" />
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarHeader>
+        <SidebarContent>
+          <div className="flex flex-col gap-2 px-2 py-2">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <div key={index} className="flex items-center gap-2 px-2 py-2">
+                <Skeleton className="size-4 rounded" />
+                <Skeleton className="h-4 w-[140px]" />
+              </div>
+            ))}
+          </div>
+        </SidebarContent>
+        <SidebarFooter>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton size="lg" className="bg-accent!" disabled>
+                <Skeleton className="h-8 w-8 rounded-lg" />
+                <div className="grid flex-1 gap-1.5">
+                  <Skeleton className="h-4 w-[100px]" />
+                  <Skeleton className="h-3 w-[80px]" />
+                </div>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarFooter>
+      </Sidebar>
+    );
+  }
+
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -161,7 +222,7 @@ export function AppSidebar({ ...props }) {
         <NavMain items={data.navMain} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={user} loading={loading} />
       </SidebarFooter>
     </Sidebar>
   );
