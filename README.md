@@ -10,7 +10,6 @@ A modern React application built with Vite featuring customer management, task t
 - **History Tracking**: Monitor historical data and trends
 - **Authentication**: Secure login and registration with WebAuthn support
 - **Responsive Design**: Modern UI with dark/light theme support
-- **Drag & Drop**: Interactive data tables with sorting and reordering capabilities
 
 ## 🛠️ Tech Stack
 
@@ -19,7 +18,7 @@ A modern React application built with Vite featuring customer management, task t
 - **Routing**: TanStack Router with protected routes
 - **UI Components**: Radix UI primitives
 - **Styling**: Tailwind CSS 4.1
-- **Data Tables**: TanStack Table with drag-and-drop support (@dnd-kit)
+- **Data Tables**: TanStack Table
 - **Charts**: Recharts for data visualization
 - **Forms**: TanStack Form with Zod validation
 - **Authentication**: SimpleWebAuthn

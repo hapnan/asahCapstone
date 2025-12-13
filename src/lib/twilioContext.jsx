@@ -38,6 +38,8 @@ export function TwilioProvider({ children }) {
 
   const deviceRef = useRef(null);
   const tokenRef = useRef(null);
+  const tokenDataRef = useRef(null);
+  const refreshTimerRef = useRef(null);
   const initPromiseRef = useRef(null);
 
   /**
@@ -83,6 +85,91 @@ export function TwilioProvider({ children }) {
   }, []);
 
   /**
+   * Refresh the Twilio token
+   */
+  const refreshToken = useCallback(async () => {
+    try {
+      console.log("Refreshing Twilio token...");
+
+      // Fetch new token
+      const response = await voiceAPI.getToken();
+      if (!response.ok) {
+        throw new Error("Failed to fetch access token");
+      }
+
+      const { data } = await response.json();
+
+      // Validate token
+      if (!data.token || typeof data.token !== "string") {
+        throw new Error("Invalid token received from server");
+      }
+
+      tokenRef.current = data.token;
+      tokenDataRef.current = data;
+
+      // Update device token
+      if (deviceRef.current) {
+        deviceRef.current.updateToken(data.token);
+        console.log(
+          "Token refreshed successfully, expires at:",
+          new Date(data.expiresAt),
+        );
+      }
+
+      // Schedule next refresh
+      if (data.expiresIn && refreshTimerRef.current !== null) {
+        // Clear existing timer
+        clearTimeout(refreshTimerRef.current);
+
+        // Refresh 5 minutes (300 seconds) before expiration
+        const refreshBuffer = 300;
+        const refreshIn = Math.max(
+          (data.expiresIn - refreshBuffer) * 1000,
+          60000,
+        ); // Minimum 1 minute
+
+        console.log(`Token refresh scheduled in ${refreshIn / 1000} seconds`);
+
+        refreshTimerRef.current = setTimeout(() => {
+          refreshToken();
+        }, refreshIn);
+      }
+    } catch (error) {
+      console.error("Failed to refresh token:", error);
+      setError("Token refresh failed");
+
+      // Retry after 30 seconds
+      setTimeout(() => {
+        refreshToken();
+      }, 30000);
+    }
+  }, []);
+
+  /**
+   * Schedule token refresh before expiration
+   * @param {number} expiresIn - Seconds until token expires
+   */
+  const scheduleTokenRefresh = useCallback(
+    (expiresIn) => {
+      // Clear existing timer
+      if (refreshTimerRef.current) {
+        clearTimeout(refreshTimerRef.current);
+      }
+
+      // Refresh 5 minutes (300 seconds) before expiration
+      const refreshBuffer = 300;
+      const refreshIn = Math.max((expiresIn - refreshBuffer) * 1000, 60000); // Minimum 1 minute
+
+      console.log(`Token refresh scheduled in ${refreshIn / 1000} seconds`);
+
+      refreshTimerRef.current = setTimeout(() => {
+        refreshToken();
+      }, refreshIn);
+    },
+    [refreshToken],
+  );
+
+  /**
    * Initialize Twilio Device with token from backend
    * Uses a singleton pattern - only initializes once
    */
@@ -117,6 +204,7 @@ export function TwilioProvider({ children }) {
         }
 
         tokenRef.current = data.token;
+        tokenDataRef.current = data;
 
         // Create and configure Twilio Device
         const device = new Device(tokenRef.current, {
@@ -141,6 +229,12 @@ export function TwilioProvider({ children }) {
           setError(err.message);
           setCallState(CallState.ERROR);
           setIsInitializing(false);
+
+          // If token expired (error codes 31200-31299), refresh immediately
+          if (err.code >= 31200 && err.code < 31300) {
+            console.log("Token expired, refreshing immediately...");
+            refreshToken();
+          }
         });
 
         device.on("unregistered", () => {
@@ -162,6 +256,11 @@ export function TwilioProvider({ children }) {
 
         // Register the device
         await device.register();
+
+        // Schedule token refresh if expiration info is available
+        if (data.expiresIn) {
+          scheduleTokenRefresh(data.expiresIn);
+        }
       } catch (err) {
         console.error("Failed to initialize device:", err);
         setError(err.message);
@@ -175,7 +274,7 @@ export function TwilioProvider({ children }) {
     })();
 
     return initPromiseRef.current;
-  }, [isDeviceReady, setupCallHandlers]);
+  }, [isDeviceReady, setupCallHandlers, scheduleTokenRefresh, refreshToken]);
 
   /**
    * Connect a call to a phone number
@@ -271,6 +370,12 @@ export function TwilioProvider({ children }) {
    */
   useEffect(() => {
     return () => {
+      // Clear refresh timer
+      if (refreshTimerRef.current) {
+        clearTimeout(refreshTimerRef.current);
+      }
+
+      // Cleanup device
       const device = deviceRef.current;
       if (device) {
         device.unregister();
