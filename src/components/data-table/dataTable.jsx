@@ -115,6 +115,13 @@ export function DataTable({
   const [minScore, setMinScore] = useState("");
   const [maxScore, setMaxScore] = useState("");
 
+  // Prediction Progress States
+  const [isPredicting, setIsPredicting] = useState(false);
+  const [predictionProgress, setPredictionProgress] = useState({
+    current: 0,
+    total: 0,
+  });
+
   const sortableId = useId();
 
   // -------------------------------------------------------------------------
@@ -289,19 +296,43 @@ export function DataTable({
     });
   }
 
-  /// predict function
+  /// predict function with batch processing
   async function predict() {
+    setIsPredicting(true);
+    setPredictionProgress({ current: 0, total: 0 });
+
     try {
       const customerResponse = await customerAPI.getAllCustomersFull();
       const customer = await customerResponse.json();
 
       if (!customer || customer.length === 0) {
         console.error("No customer data available for prediction.");
+        setIsPredicting(false);
         return;
       }
 
-      const predictionResponse = await predictionAPI.getPrediction(customer);
-      const response = await predictionResponse.json();
+      console.log(
+        `Starting batch prediction for ${customer.length} customers...`,
+      );
+
+      // Log sample data structure for debugging
+      if (customer.length > 0) {
+        console.log(
+          "Sample customer data structure:",
+          JSON.stringify(customer[0], null, 2),
+        );
+      }
+
+      // Use batch prediction with progress tracking
+      // Adjust chunk size based on your needs (500 is a safe default)
+      const response = await predictionAPI.getPredictionBatch(
+        customer,
+        500,
+        (current, total) => {
+          setPredictionProgress({ current, total });
+          console.log(`Processing batch ${current} of ${total}...`);
+        },
+      );
 
       // Update the table data with the new prediction results
       if (response && Array.isArray(response)) {
@@ -310,12 +341,19 @@ export function DataTable({
         setData(newCustomer);
         // Reset to first page after data update
         setPagination((p) => ({ ...p, pageIndex: 0 }));
+        console.log(
+          `Prediction completed successfully for ${response.length} customers`,
+        );
       }
 
       return response;
     } catch (error) {
       console.error("Prediction failed:", error);
+      alert(`Prediction failed: ${error.message}`);
       throw error;
+    } finally {
+      setIsPredicting(false);
+      setPredictionProgress({ current: 0, total: 0 });
     }
   }
 
@@ -370,8 +408,17 @@ export function DataTable({
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Button variant="outline" size="sm" onClick={() => predict()}>
-            Predict
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => predict()}
+            disabled={isPredicting}
+          >
+            {isPredicting
+              ? predictionProgress.total > 0
+                ? `Predicting... ${predictionProgress.current}/${predictionProgress.total}`
+                : "Predicting..."
+              : "Predict"}
           </Button>
 
           <Dialog open={isFilterOpen} onOpenChange={setIsFilterOpen}>
