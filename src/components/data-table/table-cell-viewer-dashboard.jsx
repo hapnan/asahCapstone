@@ -182,19 +182,11 @@ export default function TableCellViewer({ item }) {
                   <Info label="Education" value={detail.education} />
                   <Info label="Marital" value={detail.marital} />
                   <Info label="Has Credit" value={detail.has_credit} />
-                  <Info
-                    label="Housing Loan"
-                    value={detail.housing_loan}
-                    capitalize
-                  />
-                  <Info
-                    label="Personal Loan"
-                    value={detail.personal_loan}
-                    capitalize
-                  />
+                  <Info label="Housing" value={detail.housing} capitalize />
+                  <Info label="Personal Loan" value={detail.loan} capitalize />
                   <Info
                     label="Contacted Via"
-                    value={detail.contact_comunication}
+                    value={detail.contact}
                     capitalize
                   />
                 </div>
