@@ -1,21 +1,4 @@
-import { useState, useEffect, useId, useMemo } from "react";
-
-import {
-  closestCenter,
-  DndContext,
-  KeyboardSensor,
-  MouseSensor,
-  TouchSensor,
-  useSensor,
-  useSensors,
-} from "@dnd-kit/core";
-
-import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
-import {
-  arrayMove,
-  SortableContext,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
+import { useState, useEffect, useMemo } from "react";
 
 import {
   flexRender,
@@ -58,7 +41,6 @@ import {
   IconChevronRight,
   IconChevronsLeft,
   IconChevronsRight,
-  IconPlus,
   IconLayoutColumns,
   IconAdjustmentsHorizontal,
 } from "@tabler/icons-react";
@@ -80,7 +62,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { DraggableRow } from "./draggable-row";
 import { customerAPI, predictionAPI } from "@/lib/api";
 /**
  * MAIN COMPONENT
@@ -121,17 +102,6 @@ export function DataTable({
     current: 0,
     total: 0,
   });
-
-  const sortableId = useId();
-
-  // -------------------------------------------------------------------------
-  // DND SENSORS
-  // -------------------------------------------------------------------------
-  const sensors = useSensors(
-    useSensor(MouseSensor),
-    useSensor(TouchSensor),
-    useSensor(KeyboardSensor),
-  );
 
   const filteredData = useMemo(() => {
     let result = data;
@@ -234,7 +204,6 @@ export function DataTable({
     getFacetedUniqueValues: getFacetedUniqueValues(),
   });
   const paginatedRows = table.getPaginationRowModel().rows;
-  const visibleRowIds = paginatedRows.map((r) => r.id);
 
   useEffect(() => {
     const pageCount = table.getPageCount();
@@ -260,41 +229,6 @@ export function DataTable({
     setMaxScore("");
     setPagination((p) => ({ ...p, pageIndex: 0 }));
   };
-
-  // -------------------------------------------------------------------------
-  // DND HANDLER (fully original)
-  // -------------------------------------------------------------------------
-  function handleDragEnd({ active, over }) {
-    if (!over || active.id === over.id) return;
-
-    setData((prev) => {
-      const currentVisible = paginatedRows.map((r) => r.id);
-
-      const oldLocal = currentVisible.indexOf(active.id);
-      const newLocal = currentVisible.indexOf(over.id);
-
-      // if either is not in current page, abort (we only allow reorders inside same page)
-      if (oldLocal === -1 || newLocal === -1) return prev;
-
-      // map local visible position to global index in `prev` data array
-      const oldGlobal = prev.findIndex(
-        (item) => item.id.toString() === active.id,
-      );
-      const newGlobal = prev.findIndex(
-        (item) => item.id.toString() === over.id,
-      );
-
-      // safety: if not found, abort
-      if (oldGlobal === -1 || newGlobal === -1) return prev;
-
-      // // if nothing changes, return prev
-      // if (oldGlobal === newGlobal) return prev;
-
-      const next = arrayMove(prev, oldGlobal, newGlobal);
-
-      return next;
-    });
-  }
 
   /// predict function with batch processing
   async function predict() {
@@ -522,104 +456,48 @@ export function DataTable({
       </div>
       {/* =============== TABLE WRAPPER =============== */}
       <div className="overflow-hidden rounded-lg border">
-        {enableDrag ? (
-          // ---------- With Drag ----------
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            modifiers={[restrictToVerticalAxis]}
-            onDragEnd={handleDragEnd}
-            id={sortableId}
-          >
-            <Table key={finalColumns.map((c) => c.id).join("_")}>
-              {/* Header */}
-              <TableHeader className="sticky top-0 bg-muted z-10">
-                {table.getHeaderGroups().map((hg) => (
-                  <TableRow key={hg.id}>
-                    {hg.headers.map((h) => (
-                      <TableHead key={h.id}>
-                        {h.isPlaceholder
-                          ? null
-                          : flexRender(
-                              h.column.columnDef.header,
-                              h.getContext(),
-                            )}
-                      </TableHead>
-                    ))}
-                  </TableRow>
+        <Table>
+          <TableHeader className="sticky top-0 bg-muted z-10">
+            {table.getHeaderGroups().map((hg) => (
+              <TableRow key={hg.id}>
+                {hg.headers.map((h) => (
+                  <TableHead key={h.id}>
+                    {flexRender(h.column.columnDef.header, h.getContext())}
+                  </TableHead>
                 ))}
-              </TableHeader>
+              </TableRow>
+            ))}
+          </TableHeader>
 
-              {/* Body with draggable row */}
-              <TableBody>
-                <SortableContext
-                  items={visibleRowIds}
-                  strategy={verticalListSortingStrategy}
-                  key={JSON.stringify({
-                    sel: table.getState().rowSelection,
-                    vis: table.getState().columnVisibility,
-                  })}
+          <TableBody>
+            {paginatedRows.length ? (
+              paginatedRows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && "selected"}
                 >
-                  {paginatedRows.length ? (
-                    paginatedRows.map((row) => (
-                      <DraggableRow key={row.id} row={row} />
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell
-                        colSpan={finalColumns.length}
-                        className="text-center py-6"
-                      >
-                        No data available
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </SortableContext>
-              </TableBody>
-            </Table>
-          </DndContext>
-        ) : (
-          // ---------- No Drag ----------
-          <Table>
-            <TableHeader className="sticky top-0 bg-muted z-10">
-              {table.getHeaderGroups().map((hg) => (
-                <TableRow key={hg.id}>
-                  {hg.headers.map((h) => (
-                    <TableHead key={h.id}>
-                      {flexRender(h.column.columnDef.header, h.getContext())}
-                    </TableHead>
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id}>
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
+                    </TableCell>
                   ))}
                 </TableRow>
-              ))}
-            </TableHeader>
-
-            <TableBody>
-              {paginatedRows.length ? (
-                paginatedRows.map((row) => (
-                  <TableRow key={row.id}>
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={finalColumns.length}
-                    className="text-center py-6"
-                  >
-                    No data available
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        )}
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={finalColumns.length}
+                  className="text-center py-6"
+                >
+                  No data available
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </div>
 
       {/* =============== PAGINATION =============== */}
