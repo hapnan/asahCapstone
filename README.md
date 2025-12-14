@@ -1,49 +1,57 @@
 # ASAH Capstone Project
 
-A modern React application built with Vite featuring customer management, task tracking, and predictive analytics dashboard.
+A modern React application built with Vite featuring customer management, task tracking, predictive analytics dashboard, and integrated Twilio voice calling.
 
 ## 🚀 Features
 
 - **Dashboard Analytics**: Interactive data visualization with charts and tables
 - **Customer Management**: View and manage customer data with predictive insights
-- **Task Management**: Track and organize tasks efficiently
-- **History Tracking**: Monitor historical data and trends
+- **Twilio Voice Integration**: Click-to-call functionality directly from data tables with optimized single-device architecture
 - **Authentication**: Secure login and registration with WebAuthn support
 - **Responsive Design**: Modern UI with dark/light theme support
 
 ## 🛠️ Tech Stack
 
 - **Frontend Framework**: React 19.2
-- **Build Tool**: Vite
+- **Build Tool**: Vite (with Rolldown)
 - **Routing**: TanStack Router with protected routes
 - **UI Components**: Radix UI primitives
 - **Styling**: Tailwind CSS 4.1
-- **Data Tables**: TanStack Table
+- **Data Tables**: TanStack Table with shadcn/ui components
 - **Charts**: Recharts for data visualization
 - **Forms**: TanStack Form with Zod validation
 - **Authentication**: SimpleWebAuthn
+- **Voice Calling**: Twilio Voice SDK 2.17
 - **Theme**: next-themes for dark/light mode
 - **Icons**: Tabler Icons & Lucide React
+- **Notifications**: Sonner for toast notifications
 
 ## 📁 Project Structure
 
 ```
 src/
 ├── app/              # Application pages
-│   ├── dashboard/    # Dashboard with analytics
+│   ├── dashboard/    # Dashboard with analytics and call buttons
 │   ├── history/      # Historical data view
 │   ├── login/        # Authentication
 │   ├── register/     # User registration
 │   └── task/         # Task management
 ├── components/       # Reusable UI components
 │   ├── ui/          # Base UI components (buttons, cards, etc.)
-│   └── data-table/  # Data table components
+│   ├── data-table/  # Data table components with filtering & sorting
+│   ├── CallButtonCompact.jsx      # Compact call button for tables
+│   ├── CallStatusWidget.jsx       # Active call status widget
+│   ├── app-sidebar.jsx            # Application sidebar
+│   └── site-header.jsx            # Site header
 ├── hooks/           # Custom React hooks
 ├── layouts/         # Layout components
+│   └── protected-layout.jsx       # Protected route wrapper
 ├── lib/             # Utilities and contexts
 │   ├── api.js       # API client
-│   ├── authContext.jsx
-│   └── themeContext.jsx
+│   ├── authContext.jsx            # Authentication context
+│   ├── themeContext.jsx           # Theme management
+│   ├── twilioContext.jsx          # Twilio Device singleton
+│   └── utils.js     # Utility functions
 └── routes/          # Route definitions
 ```
 
@@ -73,6 +81,7 @@ npm install
 
 ```env
 VITE_API_URL=http://localhost:3000
+# Add Twilio configuration if using voice features
 ```
 
 4. Start the development server:
@@ -94,16 +103,59 @@ npm run dev
 
 The application uses WebAuthn for secure authentication. Protected routes are automatically guarded and redirect unauthenticated users to the login page.
 
+## 📞 Twilio Voice Integration
+
+The application features an optimized Twilio integration for click-to-call functionality:
+
+### Architecture Highlights
+
+- **Single Device Instance**: Uses a singleton pattern to prevent connection limit errors
+- **Shared State**: All call buttons share the same Twilio Device via React Context
+- **Automatic Synchronization**: When one call is active, all other buttons automatically disable
+- **Call Status Widget**: Fixed widget displays incoming call notifications and active call status
+- **Compact Buttons**: Lightweight call buttons designed for data table cells
+
+### Key Components
+
+- **TwilioProvider** (`src/lib/twilioContext.jsx`): Context provider managing the singleton Device
+- **CallButtonCompact** (`src/components/CallButtonCompact.jsx`): Compact call button for table rows
+- **CallStatusWidget** (`src/components/CallStatusWidget.jsx`): Global call status and notifications
+
+### Usage in Tables
+
+```jsx
+import { CallButtonCompact } from "@/components/CallButtonCompact";
+
+// In your table column definition:
+{
+  id: "actions",
+  cell: ({ row }) => (
+    <CallButtonCompact phoneNumber={row.original.phone} />
+  ),
+}
+```
+
+### Benefits
+
+- ✅ Works with unlimited rows (no connection limits)
+- ✅ One API call per session (vs. one per button)
+- ✅ Automatic state management across all buttons
+- ✅ Clean, minimal UI for data tables
+- ✅ Incoming call handling with notifications
+
+See [IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md) for detailed documentation.
+
 ## 🎨 UI Components
 
 Built with Radix UI and styled with Tailwind CSS, the application includes:
 
-- Data tables with sorting, filtering, and drag-and-drop
-- Interactive charts and visualizations
+- Data tables with sorting, filtering, and pagination
+- Interactive charts and visualizations (area charts, bar charts)
 - Modal dialogs and dropdowns
 - Tabs and navigation components
 - Theme toggle (dark/light mode)
-- Responsive sidebar navigation
+- Responsive sidebar navigation with collapsible sections
+- Toast notifications for user feedback
 
 ## 📊 API Integration
 
@@ -113,8 +165,19 @@ The app communicates with a backend API for:
 - Predictive analytics
 - Authentication
 - Task tracking
+- Twilio token generation (`/voice/token` endpoint)
 
 API configuration is managed through `src/lib/api.js` with automatic credential handling.
+
+### Backend Requirements for Twilio
+
+Your backend should provide a `/voice/token` endpoint that returns:
+
+```json
+{
+  "token": "your-twilio-jwt-token"
+}
+```
 
 ## 🚀 Deployment
 
@@ -128,6 +191,37 @@ npm run build
 
 The build output will be in the `dist` directory.
 
+## 🎯 Key Features Summary
+
+### Data Management
+
+- Sortable and filterable data tables
+- Column visibility controls
+- Real-time data updates
+- CSV/JSON data import support
+
+### Voice Communication
+
+- Click-to-call from any table row
+- Single shared Twilio Device (optimized)
+- Incoming call notifications
+- Active call status display
+
+### User Experience
+
+- Dark/light theme switching
+- Responsive design (mobile-friendly)
+- Toast notifications for feedback
+- Loading states and skeletons
+- Protected routes with authentication
+
+### Analytics & Visualization
+
+- Interactive area charts
+- Predictive analytics dashboard
+- Historical trend analysis
+- Real-time data visualization
+
 ## 📝 License
 
 This project is part of a capstone project.
@@ -135,3 +229,8 @@ This project is part of a capstone project.
 ## 👥 Contributing
 
 This is a capstone project. For any questions or suggestions, please open an issue.
+
+## 📚 Additional Documentation
+
+- [IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md) - Detailed Twilio integration documentation
+- [TWILIO_USAGE_GUIDE.js](TWILIO_USAGE_GUIDE.js) - Complete usage guide and examples
