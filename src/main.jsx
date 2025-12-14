@@ -15,7 +15,7 @@ const router = createRouter({
   },
 });
 
-function App() {
+export default function App() {
   const auth = useAuth();
 
   return <RouterProvider router={router} context={{ auth }} />;
